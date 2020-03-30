@@ -1,0 +1,49 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+ENV['VAGRANT_NO_PARALLEL'] = 'yes'
+
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "centos/7"
+  config.hostmanager.enabled = true
+  config.hostmanager.include_offline = true
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "2048"
+    vb.cpus = 2
+  end
+
+  config.vm.provision "shell", path: "bootstrap.sh"
+
+  config.vm.provision "bootstrap", type:"ansible" do |ansible|
+    ansible.playbook = "bootstrap.yml"
+  end
+
+  # Ambari Master Server
+  config.vm.define "master.ambari" do |c|
+    c.vm.hostname = "master.ambari"
+    c.vm.network "private_network", ip: "192.168.0.10"
+    c.vm.provider :virtualbox do |vb|
+          vb.customize ["modifyvm", :id, "--memory", "8192"]
+    end
+
+    c.vm.provision "shell", path: "install_ambari_server.sh"
+    c.vm.provision "shell", path: "install_ambari_agent.sh"
+
+  end
+
+  NodeCount = 3
+
+  # Ambari Worker Nodes
+  (1..NodeCount).each do |i|
+    config.vm.define "node#{i}.ambari" do |c|
+      c.vm.hostname = "node#{i}.ambari"
+      c.vm.network "private_network", ip: "192.168.0.1#{i}"
+      c.vm.provision "shell", path: "install_ambari_agent.sh"
+    end
+  end
+  
+end
