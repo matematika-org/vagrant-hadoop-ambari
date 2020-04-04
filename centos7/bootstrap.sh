@@ -46,9 +46,6 @@ echo "ambari:ambari" | chpasswd  >/dev/null 2>&1
 usermod -aG wheel ambari  >/dev/null 2>&1
 
 
-
-
-
 # echo "[TASK 11] Reboot"
 # reboot
 
